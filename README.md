@@ -10,6 +10,8 @@
 
 CerebralFlow enables the creation of "digital twins" of brain dynamics. It processes physiological signals to extract connectivity and intrinsic frequencies, then instantiates generative models to reproduce observed states.
 
+![CerebralFlow Results](results.png)
+
 *   **Personalized Modeling**: Data-driven model construction.
 *   **Simulation Engine**: Efficient simulation of neural mass and oscillator networks.
 *   **Closed-Loop Control**: Optimization tools for model fitting and control parameter tuning.
