@@ -75,7 +75,3 @@ times, phases, order = simulation.simulate(duration=10.0, dt=1/fs)
 *   **`cerebral_flow.simulation`**: Core simulation models.
 *   **`cerebral_flow.analytics`**: Analysis and metrics.
 *   **`cerebral_flow.common`**: Utilities and helpers.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
