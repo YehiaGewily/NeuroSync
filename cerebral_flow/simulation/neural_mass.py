@@ -1,8 +1,8 @@
 """
-Neural Mass Model Module
+Mass Neural Dynamics Module
 ========================
 
-This module implements the neural mass model bridging EEG data to Kuramoto oscillators.
+This module implements the mass neural dynamics model bridging signal data to oscillator networks.
 It corresponds to the second step in the framework.
 """
 
@@ -11,39 +11,39 @@ from scipy.integrate import solve_ivp
 from scipy import signal
 
 
-class NeuralMassModel:
+class MassNeuralDynamics:
     """
-    Neural mass model that bridges EEG data to Kuramoto oscillators.
+    Mass neural dynamics model that bridges signal data to oscillator networks.
     
     This class implements a neural mass model based on the Jansen-Rit model,
     which simulates the dynamics of neural populations to generate oscillatory
-    activity resembling EEG signals.
+    activity resembling physiological signals.
     """
     
-    def __init__(self, n_oscillators, connectivity=None, frequencies=None):
+    def __init__(self, n_nodes, connectivity=None, frequencies=None):
         """
-        Initialize neural mass model.
+        Initialize mass neural dynamics model.
         
         Parameters:
         -----------
-        n_oscillators : int
-            Number of neural masses (oscillators)
-        connectivity : ndarray, shape (n_oscillators, n_oscillators), optional
+        n_nodes : int
+            Number of neural masses (nodes)
+        connectivity : ndarray, shape (n_nodes, n_nodes), optional
             Connectivity matrix between neural masses
-        frequencies : ndarray, shape (n_oscillators,), optional
+        frequencies : ndarray, shape (n_nodes,), optional
             Intrinsic frequencies of neural masses
         """
-        self.n_oscillators = n_oscillators
+        self.n_nodes = n_nodes
         
         # Initialize parameters
         if connectivity is None:
-            self.connectivity = np.ones((n_oscillators, n_oscillators))
+            self.connectivity = np.ones((n_nodes, n_nodes))
             np.fill_diagonal(self.connectivity, 0)
         else:
             self.connectivity = connectivity
             
         if frequencies is None:
-            self.frequencies = np.random.normal(10, 1, n_oscillators)  # Mean 10Hz, SD 1Hz
+            self.frequencies = np.random.normal(10, 1, n_nodes)  # Mean 10Hz, SD 1Hz
         else:
             self.frequencies = frequencies
             
@@ -56,7 +56,7 @@ class NeuralMassModel:
         self.sigmoid_threshold = 6.0
         
         # State variables
-        self.x = np.zeros((n_oscillators, 4))  # [y0, y1, y2, y3] for each oscillator
+        self.x = np.zeros((n_nodes, 4))  # [y0, y1, y2, y3] for each node
         
         # Output variables
         self.phases = None
@@ -86,25 +86,25 @@ class NeuralMassModel:
         -----------
         t : float
             Time point
-        x : ndarray, shape (4*n_oscillators,)
+        x : ndarray, shape (4*n_nodes,)
             State variables flattened
             
         Returns:
         --------
-        dx_dt : ndarray, shape (4*n_oscillators,)
+        dx_dt : ndarray, shape (4*n_nodes,)
             Derivatives of state variables
         """
-        # Reshape x to (n_oscillators, 4)
-        x_reshaped = x.reshape(self.n_oscillators, 4)
+        # Reshape x to (n_nodes, 4)
+        x_reshaped = x.reshape(self.n_nodes, 4)
         dx_dt = np.zeros_like(x_reshaped)
         
-        for i in range(self.n_oscillators):
+        for i in range(self.n_nodes):
             # Extract state variables for this neural mass
             y0, y1, y2, y3 = x_reshaped[i]
             
             # Calculate input from other neural masses
             coupling_input = 0
-            for j in range(self.n_oscillators):
+            for j in range(self.n_nodes):
                 if self.connectivity[i, j] > 0:
                     coupling_input += self.connectivity[i, j] * x_reshaped[j, 0]  # y0 is the output
             
@@ -138,11 +138,11 @@ class NeuralMassModel:
         --------
         times : ndarray
             Time points
-        states : ndarray, shape (n_time_points, n_oscillators, 4)
+        states : ndarray, shape (n_time_points, n_nodes, 4)
             State variable evolution
-        phases : ndarray, shape (n_time_points, n_oscillators)
+        phases : ndarray, shape (n_time_points, n_nodes)
             Extracted phases
-        amplitudes : ndarray, shape (n_time_points, n_oscillators)
+        amplitudes : ndarray, shape (n_time_points, n_nodes)
             Extracted amplitudes
         """
         # Create time points
@@ -151,7 +151,7 @@ class NeuralMassModel:
         
         # Initialize state variables if not provided
         if initial_conditions is None:
-            initial_conditions = np.random.uniform(-0.1, 0.1, (self.n_oscillators, 4)).flatten()
+            initial_conditions = np.random.uniform(-0.1, 0.1, (self.n_nodes, 4)).flatten()
             
         # Simulate using solve_ivp
         solution = solve_ivp(
@@ -163,32 +163,32 @@ class NeuralMassModel:
         )
         
         # Reshape solution
-        states = solution.y.T.reshape(n_steps, self.n_oscillators, 4)
+        states = solution.y.T.reshape(n_steps, self.n_nodes, 4)
         
         # Extract output variables
         output = states[:, :, 0]  # y0 is the main output
         
         # Compute phases and amplitudes using Hilbert transform
-        self.phases = np.zeros((n_steps, self.n_oscillators))
-        self.amplitudes = np.zeros((n_steps, self.n_oscillators))
+        self.phases = np.zeros((n_steps, self.n_nodes))
+        self.amplitudes = np.zeros((n_steps, self.n_nodes))
         
-        for i in range(self.n_oscillators):
+        for i in range(self.n_nodes):
             analytic_signal = signal.hilbert(output[:, i])
             self.phases[:, i] = np.angle(analytic_signal)
             self.amplitudes[:, i] = np.abs(analytic_signal)
             
         return times, states, self.phases, self.amplitudes
     
-    def get_kuramoto_params(self):
+    def get_network_params(self):
         """
-        Extract parameters for Kuramoto model from neural mass simulation.
+        Extract parameters for oscillator network from neural mass simulation.
         
         Returns:
         --------
-        freq : ndarray, shape (n_oscillators,)
-            Natural frequencies for Kuramoto model
-        coupling : ndarray, shape (n_oscillators, n_oscillators)
-            Coupling matrix for Kuramoto model
+        freq : ndarray, shape (n_nodes,)
+            Natural frequencies for oscillator network
+        coupling : ndarray, shape (n_nodes, n_nodes)
+            Coupling matrix for oscillator network
             
         Raises:
         -------
@@ -200,9 +200,9 @@ class NeuralMassModel:
             
         # Estimate frequencies from phases
         n_steps = self.phases.shape[0]
-        freq = np.zeros(self.n_oscillators)
+        freq = np.zeros(self.n_nodes)
         
-        for i in range(self.n_oscillators):
+        for i in range(self.n_nodes):
             # Calculate mean frequency
             unwrapped = np.unwrap(self.phases[:, i])
             freq[i] = (unwrapped[-1] - unwrapped[0]) / (n_steps - 1) * 1000  # Convert to Hz

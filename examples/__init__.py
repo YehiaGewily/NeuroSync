@@ -1,7 +1,7 @@
 """
-Example scripts for the EEG-Kuramoto Neural Dynamics Framework.
+Example scripts for the CerebralFlow Framework.
 """
 
-from .run_pipeline import run_eeg_kuramoto_pipeline, generate_synthetic_eeg
+from .run_pipeline import run_cerebral_flow_pipeline, generate_synthetic_signal
 
-__all__ = ['run_eeg_kuramoto_pipeline', 'generate_synthetic_eeg']
+__all__ = ['run_cerebral_flow_pipeline', 'generate_synthetic_signal']

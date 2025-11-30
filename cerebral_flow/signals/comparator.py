@@ -1,8 +1,8 @@
 """
-EEG Comparator Module
-====================
+Signal Comparator Module
+=======================
 
-This module compares generated and real EEG data, and implements functional control.
+This module compares generated and real physiological data, and implements functional control.
 It corresponds to the seventh step in the framework.
 """
 
@@ -10,41 +10,41 @@ import numpy as np
 from scipy import signal
 
 
-class EEGComparator:
+class SignalComparator:
     """
-    Compare generated and real EEG data, and implement functional control.
+    Compare generated and real signal data, and implement functional control.
     
     This class provides methods to evaluate the similarity between real and generated
-    EEG signals, and to adjust model parameters to better match the real data.
+    signals, and to adjust model parameters to better match the real data.
     """
     
-    def __init__(self, real_eeg=None, generated_eeg=None):
+    def __init__(self, real_signal=None, generated_signal=None):
         """
-        Initialize comparator with real and generated EEG.
+        Initialize comparator with real and generated signals.
         
         Parameters:
         -----------
-        real_eeg : ndarray, shape (n_channels, n_time_points), optional
-            Real EEG data
-        generated_eeg : ndarray, shape (n_channels, n_time_points), optional
-            Generated EEG data
+        real_signal : ndarray, shape (n_channels, n_time_points), optional
+            Real signal data
+        generated_signal : ndarray, shape (n_channels, n_time_points), optional
+            Generated signal data
         """
-        self.real_eeg = real_eeg
-        self.generated_eeg = generated_eeg
+        self.real_signal = real_signal
+        self.generated_signal = generated_signal
         
-    def set_data(self, real_eeg, generated_eeg):
+    def set_data(self, real_signal, generated_signal):
         """
-        Set the real and generated EEG data.
+        Set the real and generated signal data.
         
         Parameters:
         -----------
-        real_eeg : ndarray, shape (n_channels, n_time_points)
-            Real EEG data
-        generated_eeg : ndarray, shape (n_channels, n_time_points)
-            Generated EEG data
+        real_signal : ndarray, shape (n_channels, n_time_points)
+            Real signal data
+        generated_signal : ndarray, shape (n_channels, n_time_points)
+            Generated signal data
         """
-        self.real_eeg = real_eeg
-        self.generated_eeg = generated_eeg
+        self.real_signal = real_signal
+        self.generated_signal = generated_signal
         
     def phase_relationship_matrix(self, phases, time_window=None):
         """
@@ -80,7 +80,7 @@ class EEGComparator:
     
     def mean_absolute_error(self, time_window=None):
         """
-        Calculate Mean Absolute Error between real and generated EEG.
+        Calculate Mean Absolute Error between real and generated signals.
         
         Parameters:
         -----------
@@ -95,18 +95,18 @@ class EEGComparator:
         Raises:
         -------
         ValueError
-            If either real or generated EEG data is missing
+            If either real or generated data is missing
         """
-        if self.real_eeg is None or self.generated_eeg is None:
-            raise ValueError("Both real and generated EEG data must be provided.")
+        if self.real_signal is None or self.generated_signal is None:
+            raise ValueError("Both real and generated signal data must be provided.")
             
         if time_window is not None:
             start, end = time_window
-            real = self.real_eeg[:, start:end]
-            gen = self.generated_eeg[:, start:end]
+            real = self.real_signal[:, start:end]
+            gen = self.generated_signal[:, start:end]
         else:
-            real = self.real_eeg
-            gen = self.generated_eeg
+            real = self.real_signal
+            gen = self.generated_signal
             
         # Normalize data
         real_norm = (real - np.mean(real)) / np.std(real)
@@ -119,7 +119,7 @@ class EEGComparator:
     
     def pearson_correlation(self, time_window=None):
         """
-        Calculate Pearson correlation between real and generated EEG.
+        Calculate Pearson correlation between real and generated signals.
         
         Parameters:
         -----------
@@ -134,18 +134,18 @@ class EEGComparator:
         Raises:
         -------
         ValueError
-            If either real or generated EEG data is missing
+            If either real or generated data is missing
         """
-        if self.real_eeg is None or self.generated_eeg is None:
-            raise ValueError("Both real and generated EEG data must be provided.")
+        if self.real_signal is None or self.generated_signal is None:
+            raise ValueError("Both real and generated signal data must be provided.")
             
         if time_window is not None:
             start, end = time_window
-            real = self.real_eeg[:, start:end]
-            gen = self.generated_eeg[:, start:end]
+            real = self.real_signal[:, start:end]
+            gen = self.generated_signal[:, start:end]
         else:
-            real = self.real_eeg
-            gen = self.generated_eeg
+            real = self.real_signal
+            gen = self.generated_signal
             
         n_channels = real.shape[0]
         correlations = np.zeros(n_channels)
@@ -157,7 +157,7 @@ class EEGComparator:
     
     def compare_psd(self, fs=256, fmin=1, fmax=45, n_fft=512):
         """
-        Compare Power Spectral Density between real and generated EEG.
+        Compare Power Spectral Density between real and generated signals.
         
         Parameters:
         -----------
@@ -173,40 +173,40 @@ class EEGComparator:
         Raises:
         -------
         ValueError
-            If either real or generated EEG data is missing
+            If either real or generated data is missing
         """
-        if self.real_eeg is None or self.generated_eeg is None:
-            raise ValueError("Both real and generated EEG data must be provided.")
+        if self.real_signal is None or self.generated_signal is None:
+            raise ValueError("Both real and generated signal data must be provided.")
             
-        # Compute PSD for real EEG
+        # Compute PSD for real signal
         freqs = np.linspace(0, fs/2, n_fft//2 + 1)
         mask = (freqs >= fmin) & (freqs <= fmax)
         freqs = freqs[mask]
         
-        n_channels = self.real_eeg.shape[0]
+        n_channels = self.real_signal.shape[0]
         real_psd = np.zeros((n_channels, np.sum(mask)))
         gen_psd = np.zeros((n_channels, np.sum(mask)))
         
         for ch in range(n_channels):
-            # Real EEG
-            f, Pxx_real = signal.welch(self.real_eeg[ch, :], fs=fs, nperseg=n_fft, noverlap=n_fft//2)
+            # Real signal
+            f, Pxx_real = signal.welch(self.real_signal[ch, :], fs=fs, nperseg=n_fft, noverlap=n_fft//2)
             real_psd[ch, :] = Pxx_real[mask]
             
-            # Generated EEG
-            f, Pxx_gen = signal.welch(self.generated_eeg[ch, :], fs=fs, nperseg=n_fft, noverlap=n_fft//2)
+            # Generated signal
+            f, Pxx_gen = signal.welch(self.generated_signal[ch, :], fs=fs, nperseg=n_fft, noverlap=n_fft//2)
             gen_psd[ch, :] = Pxx_gen[mask]
             
         return freqs, real_psd, gen_psd
     
-    def functional_control(self, kuramoto_model, target_pattern, learning_rate=0.01, max_iterations=100):
+    def functional_control(self, oscillator_network, target_pattern, learning_rate=0.01, max_iterations=100):
         """
-        Implement functional control by adjusting Kuramoto parameters.
+        Implement functional control by adjusting oscillator network parameters.
         
         Parameters:
         -----------
-        kuramoto_model : KuramotoModel
+        oscillator_network : OscillatorNetwork
             Model to control
-        target_pattern : ndarray, shape (n_channels, n_channels)
+        target_pattern : ndarray, shape (n_nodes, n_nodes)
             Target phase relationship pattern
         learning_rate : float, optional
             Learning rate for parameter updates
@@ -215,13 +215,13 @@ class EEGComparator:
             
         Returns:
         --------
-        updated_model : KuramotoModel
+        updated_model : OscillatorNetwork
             Model with updated parameters
         error_history : list
             Error at each iteration
         """
         # Make a copy of the model
-        updated_model = kuramoto_model
+        updated_model = oscillator_network
         
         # Store original parameters
         original_coupling = updated_model.global_coupling
@@ -252,8 +252,8 @@ class EEGComparator:
             updated_model.global_coupling -= learning_rate * np.mean(gradient)
             
             # 2. Adjust adjacency matrix (with constraints to maintain structure)
-            for i in range(updated_model.n_oscillators):
-                for j in range(updated_model.n_oscillators):
+            for i in range(updated_model.n_nodes):
+                for j in range(updated_model.n_nodes):
                     if original_adjacency[i, j] > 0:  # Only adjust existing connections
                         updated_model.adjacency_matrix[i, j] -= learning_rate * gradient[i, j]
                         # Ensure non-negativity

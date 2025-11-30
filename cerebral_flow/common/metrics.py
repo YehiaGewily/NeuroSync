@@ -3,23 +3,23 @@ Metrics Utility Module
 =====================
 
 This module provides metrics for evaluating model performance and
-comparing real and generated EEG data.
+comparing real and generated signal data.
 """
 
 import numpy as np
 from scipy import signal, stats
 
 
-def mean_absolute_error(real_data, generated_data, normalize=True):
+def mean_absolute_error(real_signal, generated_signal, normalize=True):
     """
-    Calculate Mean Absolute Error between real and generated data.
+    Calculate Mean Absolute Error between real and generated signals.
     
     Parameters:
     -----------
-    real_data : ndarray
-        Real data
-    generated_data : ndarray
-        Generated data
+    real_signal : ndarray
+        Real signal data
+    generated_signal : ndarray
+        Generated signal data
     normalize : bool, optional
         Whether to normalize data before computing MAE
         
@@ -29,23 +29,23 @@ def mean_absolute_error(real_data, generated_data, normalize=True):
         Mean Absolute Error
     """
     if normalize:
-        real_norm = (real_data - np.mean(real_data)) / np.std(real_data)
-        gen_norm = (generated_data - np.mean(generated_data)) / np.std(generated_data)
+        real_norm = (real_signal - np.mean(real_signal)) / np.std(real_signal)
+        gen_norm = (generated_signal - np.mean(generated_signal)) / np.std(generated_signal)
         return np.mean(np.abs(real_norm - gen_norm))
     else:
-        return np.mean(np.abs(real_data - generated_data))
+        return np.mean(np.abs(real_signal - generated_signal))
 
 
-def pearson_correlation(real_data, generated_data):
+def pearson_correlation(real_signal, generated_signal):
     """
     Calculate Pearson correlation coefficient.
     
     Parameters:
     -----------
-    real_data : ndarray, shape (n,)
-        Real data (1D array)
-    generated_data : ndarray, shape (n,)
-        Generated data (1D array)
+    real_signal : ndarray, shape (n,)
+        Real signal data (1D array)
+    generated_signal : ndarray, shape (n,)
+        Generated signal data (1D array)
         
     Returns:
     --------
@@ -54,19 +54,19 @@ def pearson_correlation(real_data, generated_data):
     p_value : float
         p-value for the correlation
     """
-    return stats.pearsonr(real_data, generated_data)
+    return stats.pearsonr(real_signal, generated_signal)
 
 
-def cross_correlation_max(real_data, generated_data, max_lag=100):
+def cross_correlation_max(real_signal, generated_signal, max_lag=100):
     """
     Calculate maximum cross-correlation and corresponding lag.
     
     Parameters:
     -----------
-    real_data : ndarray, shape (n,)
-        Real data (1D array)
-    generated_data : ndarray, shape (n,)
-        Generated data (1D array)
+    real_signal : ndarray, shape (n,)
+        Real signal data (1D array)
+    generated_signal : ndarray, shape (n,)
+        Generated signal data (1D array)
     max_lag : int, optional
         Maximum lag to consider
         
@@ -78,13 +78,13 @@ def cross_correlation_max(real_data, generated_data, max_lag=100):
         Lag at which maximum occurs
     """
     # Compute cross-correlation
-    n = len(real_data)
-    corr = signal.correlate(real_data, generated_data, mode='same') / n
+    n = len(real_signal)
+    corr = signal.correlate(real_signal, generated_signal, mode='same') / n
     lags = np.arange(-max_lag, max_lag + 1)
     corr = corr[n//2 - max_lag:n//2 + max_lag + 1]
     
     # Normalize
-    corr /= np.sqrt(np.mean(real_data**2) * np.mean(generated_data**2))
+    corr /= np.sqrt(np.mean(real_signal**2) * np.mean(generated_signal**2))
     
     # Find maximum
     max_idx = np.argmax(np.abs(corr))
@@ -94,16 +94,16 @@ def cross_correlation_max(real_data, generated_data, max_lag=100):
     return max_corr, lag
 
 
-def spectral_coherence(real_data, generated_data, fs=256, fmin=0, fmax=100):
+def spectral_coherence(real_signal, generated_signal, fs=256, fmin=0, fmax=100):
     """
-    Calculate spectral coherence between real and generated data.
+    Calculate spectral coherence between real and generated signals.
     
     Parameters:
     -----------
-    real_data : ndarray, shape (n,)
-        Real data (1D array)
-    generated_data : ndarray, shape (n,)
-        Generated data (1D array)
+    real_signal : ndarray, shape (n,)
+        Real signal data (1D array)
+    generated_signal : ndarray, shape (n,)
+        Generated signal data (1D array)
     fs : float, optional
         Sampling frequency
     fmin, fmax : float, optional
@@ -119,7 +119,7 @@ def spectral_coherence(real_data, generated_data, fs=256, fmin=0, fmax=100):
         Mean coherence in the specified frequency range
     """
     # Compute coherence
-    f, Cxy = signal.coherence(real_data, generated_data, fs=fs)
+    f, Cxy = signal.coherence(real_signal, generated_signal, fs=fs)
     
     # Filter frequencies
     mask = (f >= fmin) & (f <= fmax)
@@ -132,16 +132,16 @@ def spectral_coherence(real_data, generated_data, fs=256, fmin=0, fmax=100):
     return freqs, coherence, mean_coherence
 
 
-def mutual_information_score(real_data, generated_data, bins=10):
+def mutual_information_score(real_signal, generated_signal, bins=10):
     """
-    Calculate mutual information between real and generated data.
+    Calculate mutual information between real and generated signals.
     
     Parameters:
     -----------
-    real_data : ndarray, shape (n,)
-        Real data (1D array)
-    generated_data : ndarray, shape (n,)
-        Generated data (1D array)
+    real_signal : ndarray, shape (n,)
+        Real signal data (1D array)
+    generated_signal : ndarray, shape (n,)
+        Generated signal data (1D array)
     bins : int, optional
         Number of bins for histogram
         
@@ -151,12 +151,12 @@ def mutual_information_score(real_data, generated_data, bins=10):
         Mutual information value
     """
     # Compute histograms
-    hist_real, bin_edges = np.histogram(real_data, bins=bins)
-    hist_gen, _ = np.histogram(generated_data, bins=bin_edges)
+    hist_real, bin_edges = np.histogram(real_signal, bins=bins)
+    hist_gen, _ = np.histogram(generated_signal, bins=bin_edges)
     
     hist_joint, _, _ = np.histogram2d(
-        real_data, 
-        generated_data, 
+        real_signal, 
+        generated_signal, 
         bins=[bin_edges, bin_edges]
     )
     
@@ -181,7 +181,7 @@ def order_parameter(phases):
     
     Parameters:
     -----------
-    phases : ndarray, shape (n_oscillators,) or (n_time_points, n_oscillators)
+    phases : ndarray, shape (n_nodes,) or (n_time_points, n_nodes)
         Phases of oscillators
         
     Returns:

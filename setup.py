@@ -5,12 +5,12 @@ Setup script for the EEG-Kuramoto Neural Dynamics Framework.
 from setuptools import setup, find_packages
 
 setup(
-    name="eeg_kuramoto",
+    name="cerebral_flow",
     version="0.1.0",
-    description="EEG-Kuramoto Neural Dynamics Framework for modeling neural oscillations",
-    author="",
-    author_email="",
-    url="",
+    description="CerebralFlow: Neural Dynamics Simulation Framework",
+    author="CerebralFlow Team",
+    author_email="contact@cerebralflow.org",
+    url="https://github.com/cerebralflow/cerebralflow",
     packages=find_packages(),
     install_requires=[
         "numpy>=1.19.0",

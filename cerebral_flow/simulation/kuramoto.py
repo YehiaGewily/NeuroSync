@@ -1,8 +1,8 @@
 """
-Kuramoto Model Module
+Oscillator Network Module
 ====================
 
-This module implements the Kuramoto model using parameters derived from neural mass model.
+This module implements the oscillator network model using parameters derived from mass neural dynamics.
 It corresponds to the third step in the framework.
 """
 
@@ -10,28 +10,28 @@ import numpy as np
 from scipy.integrate import solve_ivp
 
 
-class KuramotoModel:
+class OscillatorNetwork:
     """
-    Implementation of the Kuramoto model using parameters derived from neural mass model.
+    Implementation of the oscillator network model using parameters derived from mass neural dynamics.
     
-    The Kuramoto model describes a system of coupled oscillators and is used to
+    The oscillator network describes a system of coupled oscillators and is used to
     model synchronization phenomena in neural systems.
     """
     
     def __init__(self, frequencies, adjacency_matrix, global_coupling=1.0):
         """
-        Initialize Kuramoto model.
+        Initialize oscillator network.
         
         Parameters:
         -----------
-        frequencies : ndarray, shape (n_oscillators,)
+        frequencies : ndarray, shape (n_nodes,)
             Natural frequencies for oscillators
-        adjacency_matrix : ndarray, shape (n_oscillators, n_oscillators)
+        adjacency_matrix : ndarray, shape (n_nodes, n_nodes)
             Connectivity matrix between oscillators
         global_coupling : float, optional
             Global coupling strength
         """
-        self.n_oscillators = len(frequencies)
+        self.n_nodes = len(frequencies)
         self.frequencies = frequencies
         self.adjacency_matrix = adjacency_matrix
         self.global_coupling = global_coupling
@@ -43,33 +43,33 @@ class KuramotoModel:
         
     def phase_evolution(self, t, phases, K=None):
         """
-        Basic Kuramoto model differential equation.
+        Basic oscillator network differential equation.
         
         Parameters:
         -----------
         t : float
             Time point
-        phases : ndarray, shape (n_oscillators,)
+        phases : ndarray, shape (n_nodes,)
             Current phases of oscillators
         K : float, optional
             Current coupling strength (for time-varying coupling)
             
         Returns:
         --------
-        dphases_dt : ndarray, shape (n_oscillators,)
+        dphases_dt : ndarray, shape (n_nodes,)
             Phase derivatives
         """
         if K is None:
             K = self.global_coupling
             
-        dphases_dt = np.zeros(self.n_oscillators)
+        dphases_dt = np.zeros(self.n_nodes)
         
-        for i in range(self.n_oscillators):
+        for i in range(self.n_nodes):
             # Natural frequency term
             dphases_dt[i] = self.frequencies[i]
             
             # Coupling term
-            for j in range(self.n_oscillators):
+            for j in range(self.n_nodes):
                 if self.adjacency_matrix[i, j] > 0:
                     dphases_dt[i] += K * self.adjacency_matrix[i, j] * np.sin(phases[j] - phases[i])
                     
@@ -81,7 +81,7 @@ class KuramotoModel:
         
         Parameters:
         -----------
-        phases : ndarray, shape (n_oscillators,) or (n_time_points, n_oscillators)
+        phases : ndarray, shape (n_nodes,) or (n_time_points, n_nodes)
             Phases of oscillators
             
         Returns:
@@ -100,7 +100,7 @@ class KuramotoModel:
     
     def simulate(self, duration, dt, initial_phases=None):
         """
-        Simulate Kuramoto model.
+        Simulate oscillator network.
         
         Parameters:
         -----------
@@ -108,14 +108,14 @@ class KuramotoModel:
             Simulation duration in time units
         dt : float
             Time step for simulation
-        initial_phases : ndarray, shape (n_oscillators,), optional
+        initial_phases : ndarray, shape (n_nodes,), optional
             Initial phases (default: random from uniform distribution [0, 2π])
             
         Returns:
         --------
         times : ndarray
             Time points
-        phases : ndarray, shape (n_time_points, n_oscillators)
+        phases : ndarray, shape (n_time_points, n_nodes)
             Phase evolution
         order_parameter : ndarray, shape (n_time_points,)
             Order parameter evolution
@@ -126,7 +126,7 @@ class KuramotoModel:
         
         # Initialize phases if not provided
         if initial_phases is None:
-            initial_phases = np.random.uniform(0, 2*np.pi, self.n_oscillators)
+            initial_phases = np.random.uniform(0, 2*np.pi, self.n_nodes)
             
         # Simulate using solve_ivp for better accuracy
         solution = solve_ivp(

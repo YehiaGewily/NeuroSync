@@ -2,7 +2,7 @@
 Statistical Analysis Module
 =========================
 
-This module performs statistical similarity analysis to update Kuramoto model parameters.
+This module performs statistical similarity analysis to update oscillator network parameters.
 It corresponds to the eighth step in the framework.
 """
 
@@ -13,41 +13,41 @@ from typing import Tuple, Dict, Optional, Union, List
 
 class StatisticalAnalyzer:
     """
-    Perform statistical similarity analysis to update Kuramoto model.
+    Perform statistical similarity analysis to update oscillator network.
     
     This class provides methods to analyze the statistical properties of real and
-    generated EEG data, and to derive parameter updates for the Kuramoto model
+    generated signals, and to derive parameter updates for the oscillator network
     based on the differences observed.
     """
     
-    def __init__(self, real_eeg: Optional[np.ndarray] = None, 
-                 generated_eeg: Optional[np.ndarray] = None):
+    def __init__(self, real_signal: Optional[np.ndarray] = None, 
+                 generated_signal: Optional[np.ndarray] = None):
         """
-        Initialize analyzer with real and generated EEG.
+        Initialize analyzer with real and generated signals.
         
         Parameters
         ----------
-        real_eeg : ndarray, shape (n_channels, n_time_points), optional
-            Real EEG data
-        generated_eeg : ndarray, shape (n_channels, n_time_points), optional
-            Generated EEG data
+        real_signal : ndarray, shape (n_channels, n_time_points), optional
+            Real signal data
+        generated_signal : ndarray, shape (n_channels, n_time_points), optional
+            Generated signal data
         """
-        self.real_eeg = real_eeg
-        self.generated_eeg = generated_eeg
+        self.real_signal = real_signal
+        self.generated_signal = generated_signal
         
-    def set_data(self, real_eeg: np.ndarray, generated_eeg: np.ndarray) -> None:
+    def set_data(self, real_signal: np.ndarray, generated_signal: np.ndarray) -> None:
         """
-        Set the real and generated EEG data.
+        Set the real and generated signal data.
         
         Parameters
         ----------
-        real_eeg : ndarray, shape (n_channels, n_time_points)
-            Real EEG data
-        generated_eeg : ndarray, shape (n_channels, n_time_points)
-            Generated EEG data
+        real_signal : ndarray, shape (n_channels, n_time_points)
+            Real signal data
+        generated_signal : ndarray, shape (n_channels, n_time_points)
+            Generated signal data
         """
-        self.real_eeg = real_eeg
-        self.generated_eeg = generated_eeg
+        self.real_signal = real_signal
+        self.generated_signal = generated_signal
         self._validate_data()
         
     def _validate_data(self) -> None:
@@ -59,18 +59,18 @@ class StatisticalAnalyzer:
         ValueError
             If data is missing or dimensions don't match
         """
-        if self.real_eeg is None or self.generated_eeg is None:
-            raise ValueError("Both real and generated EEG data must be provided.")
+        if self.real_signal is None or self.generated_signal is None:
+            raise ValueError("Both real and generated signal data must be provided.")
             
-        if self.real_eeg.shape != self.generated_eeg.shape:
+        if self.real_signal.shape != self.generated_signal.shape:
             raise ValueError(
-                f"Shape mismatch: real EEG {self.real_eeg.shape} vs "
-                f"generated EEG {self.generated_eeg.shape}"
+                f"Shape mismatch: real signal {self.real_signal.shape} vs "
+                f"generated signal {self.generated_signal.shape}"
             )
     
     def cross_correlation(self, max_lag: int = 100) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Compute cross-correlation between real and generated EEG.
+        Compute cross-correlation between real and generated signals.
         
         Parameters
         ----------
@@ -86,15 +86,15 @@ class StatisticalAnalyzer:
         """
         self._validate_data()
             
-        n_channels = self.real_eeg.shape[0]
+        n_channels = self.real_signal.shape[0]
         lags = np.arange(-max_lag, max_lag+1)
         xcorr = np.zeros((n_channels, len(lags)))
         
         for ch in range(n_channels):
             # Get normalized cross-correlation
             correlation = self._compute_cross_correlation(
-                self.real_eeg[ch, :],
-                self.generated_eeg[ch, :],
+                self.real_signal[ch, :],
+                self.generated_signal[ch, :],
                 max_lag
             )
             xcorr[ch, :] = correlation
@@ -134,7 +134,7 @@ class StatisticalAnalyzer:
         
     def mutual_information(self, bins: int = 10) -> np.ndarray:
         """
-        Compute mutual information between real and generated EEG.
+        Compute mutual information between real and generated signals.
         
         Parameters
         ----------
@@ -148,13 +148,13 @@ class StatisticalAnalyzer:
         """
         self._validate_data()
             
-        n_channels = self.real_eeg.shape[0]
+        n_channels = self.real_signal.shape[0]
         mi = np.zeros(n_channels)
         
         for ch in range(n_channels):
             mi[ch] = self._compute_mutual_information(
-                self.real_eeg[ch, :],
-                self.generated_eeg[ch, :],
+                self.real_signal[ch, :],
+                self.generated_signal[ch, :],
                 bins
             )
                     
@@ -202,9 +202,9 @@ class StatisticalAnalyzer:
         return mi
         
     def network_reconstruction(self, method: str = 'correlation', 
-                              threshold: Optional[float] = 0.3) -> Tuple[np.ndarray, np.ndarray]:
+                               threshold: Optional[float] = 0.3) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Reconstruct network connectivity from EEG data.
+        Reconstruct network connectivity from signal data.
         
         Parameters
         ----------
@@ -219,11 +219,11 @@ class StatisticalAnalyzer:
         Returns
         -------
         real_network, gen_network : ndarray, shape (n_channels, n_channels)
-            Reconstructed networks for real and generated EEG
+            Reconstructed networks for real and generated signals
         """
         self._validate_data()
             
-        n_channels = self.real_eeg.shape[0]
+        n_channels = self.real_signal.shape[0]
         
         # Initialize connectivity matrices
         real_network = np.zeros((n_channels, n_channels))
@@ -231,16 +231,16 @@ class StatisticalAnalyzer:
         
         # Select reconstruction method
         if method == 'correlation':
-            real_network = self._correlation_matrix(self.real_eeg)
-            gen_network = self._correlation_matrix(self.generated_eeg)
+            real_network = self._correlation_matrix(self.real_signal)
+            gen_network = self._correlation_matrix(self.generated_signal)
                     
         elif method == 'mutual_info':
-            real_network = self._mutual_info_matrix(self.real_eeg)
-            gen_network = self._mutual_info_matrix(self.generated_eeg)
+            real_network = self._mutual_info_matrix(self.real_signal)
+            gen_network = self._mutual_info_matrix(self.generated_signal)
                     
         elif method == 'coherence':
-            real_network = self._coherence_matrix(self.real_eeg)
-            gen_network = self._coherence_matrix(self.generated_eeg)
+            real_network = self._coherence_matrix(self.real_signal)
+            gen_network = self._coherence_matrix(self.generated_signal)
         
         else:
             raise ValueError(f"Unknown reconstruction method: {method}")
@@ -379,26 +379,26 @@ class StatisticalAnalyzer:
         
         return metrics
     
-    def update_model_parameters(self, kuramoto_model, learning_rate: float = 0.1):
+    def update_model_parameters(self, oscillator_network, learning_rate: float = 0.1):
         """
-        Update Kuramoto model parameters based on statistical analysis.
+        Update oscillator network parameters based on statistical analysis.
         
         Parameters
         ----------
-        kuramoto_model : KuramotoModel
+        oscillator_network : OscillatorNetwork
             Model to update
         learning_rate : float, optional
             Learning rate for updates
             
         Returns
         -------
-        updated_model : KuramotoModel
+        updated_model : OscillatorNetwork
             Model with updated parameters
         """
         self._validate_data()
         
         # Create a copy of the model to avoid modifying the original
-        updated_model = kuramoto_model
+        updated_model = oscillator_network
         
         # 1. Update adjacency matrix based on network reconstruction
         self._update_adjacency_matrix(updated_model, learning_rate)
@@ -417,7 +417,7 @@ class StatisticalAnalyzer:
         
         Parameters
         ----------
-        model : KuramotoModel
+        model : OscillatorNetwork
             Model to update
         learning_rate : float
             Learning rate for updates
@@ -441,14 +441,14 @@ class StatisticalAnalyzer:
         
         Parameters
         ----------
-        model : KuramotoModel
+        model : OscillatorNetwork
             Model to update
         learning_rate : float
             Learning rate for updates
         """
         # Calculate peak frequencies from PSD
-        freqs_real, psd_real = self.compute_psd(self.real_eeg)
-        freqs_gen, psd_gen = self.compute_psd(self.generated_eeg)
+        freqs_real, psd_real = self.compute_psd(self.real_signal)
+        freqs_gen, psd_gen = self.compute_psd(self.generated_signal)
         
         # Find peak frequencies (weighted average approach)
         peak_freqs_real = self._calculate_weighted_peak_freq(freqs_real, psd_real)
@@ -489,14 +489,14 @@ class StatisticalAnalyzer:
         
         Parameters
         ----------
-        model : KuramotoModel
+        model : OscillatorNetwork
             Model to update
         learning_rate : float
             Learning rate for updates
         """
-        # Extract phases from real and generated EEG
-        _, real_phases = self._extract_phases(self.real_eeg)
-        _, gen_phases = self._extract_phases(self.generated_eeg)
+        # Extract phases from real and generated signals
+        _, real_phases = self._extract_phases(self.real_signal)
+        _, gen_phases = self._extract_phases(self.generated_signal)
         
         # Calculate order parameters
         real_order = self._calculate_order_parameter(real_phases)
@@ -509,14 +509,14 @@ class StatisticalAnalyzer:
         # Ensure positive coupling
         model.global_coupling = max(0.1, model.global_coupling)
     
-    def _extract_phases(self, eeg_data: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def _extract_phases(self, signal_data: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Extract analytic signal and instantaneous phases from EEG data.
+        Extract analytic signal and instantaneous phases from signal data.
         
         Parameters
         ----------
-        eeg_data : ndarray, shape (n_channels, n_samples)
-            EEG data
+        signal_data : ndarray, shape (n_channels, n_samples)
+            Signal data
             
         Returns
         -------
@@ -525,12 +525,12 @@ class StatisticalAnalyzer:
         phases : ndarray, shape (n_channels, n_samples)
             Instantaneous phases
         """
-        n_channels, n_samples = eeg_data.shape
+        n_channels, n_samples = signal_data.shape
         analytic_signal = np.zeros((n_channels, n_samples), dtype=complex)
         phases = np.zeros((n_channels, n_samples))
         
         for ch in range(n_channels):
-            analytic_signal[ch, :] = signal.hilbert(eeg_data[ch, :])
+            analytic_signal[ch, :] = signal.hilbert(signal_data[ch, :])
             phases[ch, :] = np.angle(analytic_signal[ch, :])
             
         return analytic_signal, phases
@@ -558,7 +558,7 @@ class StatisticalAnalyzer:
         # Return mean absolute value
         return np.mean(np.abs(z))
     
-    def compute_psd(self, eeg_data: np.ndarray, fs: float = 256, 
+    def compute_psd(self, signal_data: np.ndarray, fs: float = 256, 
                    fmin: float = 1, fmax: float = 45, 
                    n_fft: int = 512) -> Tuple[np.ndarray, np.ndarray]:
         """
@@ -566,8 +566,8 @@ class StatisticalAnalyzer:
         
         Parameters
         ----------
-        eeg_data : ndarray, shape (n_channels, n_time_points)
-            EEG data
+        signal_data : ndarray, shape (n_channels, n_time_points)
+            Signal data
         fs : float, optional
             Sampling frequency
         fmin, fmax : float, optional
@@ -587,13 +587,13 @@ class StatisticalAnalyzer:
         mask = (freqs >= fmin) & (freqs <= fmax)
         freqs = freqs[mask]
         
-        n_channels = eeg_data.shape[0]
+        n_channels = signal_data.shape[0]
         n_freq_bins = np.sum(mask)
         psd = np.zeros((n_channels, n_freq_bins))
         
         # Use Welch's method for each channel
         for ch in range(n_channels):
-            f, Pxx = signal.welch(eeg_data[ch, :], fs=fs, nperseg=n_fft, noverlap=n_fft//2)
+            f, Pxx = signal.welch(signal_data[ch, :], fs=fs, nperseg=n_fft, noverlap=n_fft//2)
             psd[ch, :] = Pxx[mask]
             
         return freqs, psd

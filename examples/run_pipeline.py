@@ -2,29 +2,29 @@
 Example Pipeline Script
 ======================
 
-This script demonstrates the use of the EEG-Kuramoto Neural Dynamics framework
-by simulating EEG data and running the complete pipeline.
+This script demonstrates the use of the CerebralFlow framework
+by simulating signal data and running the complete pipeline.
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 # Import framework components
-from eeg_kuramoto.eeg.data_inversion import EEGDataInversion
-from eeg_kuramoto.models.neural_mass import NeuralMassModel
-from eeg_kuramoto.models.time_varying import TimeVaryingKuramoto
-from eeg_kuramoto.analysis.critical_sync import CriticalSynchronizationAnalyzer
-from eeg_kuramoto.eeg.generator import EEGGenerator
-from eeg_kuramoto.eeg.comparator import EEGComparator
-from eeg_kuramoto.analysis.statistics import StatisticalAnalyzer
-from eeg_kuramoto.analysis.closed_loop import ClosedLoopRefiner
-from eeg_kuramoto.utils.plotting import plot_full_results
-from eeg_kuramoto.utils.metrics import compare_networks
+from cerebral_flow.signals.data_inversion import SignalInverter
+from cerebral_flow.simulation.neural_mass import MassNeuralDynamics
+from cerebral_flow.simulation.time_varying import DynamicOscillatorNetwork
+from cerebral_flow.analytics.critical_sync import CriticalityAnalyzer
+from cerebral_flow.signals.generator import SignalGenerator
+from cerebral_flow.signals.comparator import SignalComparator
+from cerebral_flow.analytics.statistics import StatisticalAnalyzer
+from cerebral_flow.analytics.closed_loop import ClosedLoopOptimizer
+from cerebral_flow.common.plotting import plot_full_results
+from cerebral_flow.common.metrics import compare_networks
 
 
-def generate_synthetic_eeg(n_channels=19, duration=10, sampling_rate=256):
+def generate_synthetic_signal(n_channels=19, duration=10, sampling_rate=256):
     """
-    Generate synthetic EEG data for demonstration.
+    Generate synthetic signal data for demonstration.
     
     Parameters:
     -----------
@@ -37,16 +37,16 @@ def generate_synthetic_eeg(n_channels=19, duration=10, sampling_rate=256):
         
     Returns:
     --------
-    eeg_data : ndarray, shape (n_channels, n_samples)
-        Synthetic EEG data
+    signal_data : ndarray, shape (n_channels, n_samples)
+        Synthetic signal data
     """
     n_samples = int(duration * sampling_rate)
     
     # Create time vector
     t = np.arange(n_samples) / sampling_rate
     
-    # Initialize EEG data
-    eeg_data = np.zeros((n_channels, n_samples))
+    # Initialize signal data
+    signal_data = np.zeros((n_channels, n_samples))
     
     for ch in range(n_channels):
         # Base frequency in alpha range (8-13 Hz) with small variations between channels
@@ -64,69 +64,69 @@ def generate_synthetic_eeg(n_channels=19, duration=10, sampling_rate=256):
         beta = 0.2 * np.sin(2 * np.pi * beta_freq * t)
         
         # Combine and add noise
-        eeg_data[ch] = alpha + theta + beta + 0.1 * np.random.randn(n_samples)
+        signal_data[ch] = alpha + theta + beta + 0.1 * np.random.randn(n_samples)
     
-    return eeg_data
+    return signal_data
 
 
-def run_eeg_kuramoto_pipeline(eeg_data, sampling_rate=256, n_channels=19):
+def run_cerebral_flow_pipeline(signal_data, sampling_rate=256, n_channels=19):
     """
-    Run complete EEG-Kuramoto Neural Dynamics pipeline.
+    Run complete CerebralFlow pipeline.
     
     Parameters:
     -----------
-    eeg_data : ndarray, shape (n_channels, n_samples)
-        EEG data to model
+    signal_data : ndarray, shape (n_channels, n_samples)
+        Signal data to model
     sampling_rate : float
-        Sampling rate of EEG data
+        Sampling rate of signal data
     n_channels : int
         Number of channels (electrodes)
         
     Returns:
     --------
-    refined_model : TimeVaryingKuramoto
+    refined_model : DynamicOscillatorNetwork
         Final refined model
     metrics : dict
         Performance metrics
     """
-    print("Starting EEG-Kuramoto Neural Dynamics Framework Pipeline")
+    print("Starting CerebralFlow Framework Pipeline")
     
     # Split data into training and validation sets
-    n_samples = eeg_data.shape[1]
+    n_samples = signal_data.shape[1]
     split_point = int(0.8 * n_samples)
-    training_eeg = eeg_data[:, :split_point]
-    validation_eeg = eeg_data[:, split_point:]
+    training_signal = signal_data[:, :split_point]
+    validation_signal = signal_data[:, split_point:]
     
-    print(f"Data split: Training {training_eeg.shape}, Validation {validation_eeg.shape}")
+    print(f"Data split: Training {training_signal.shape}, Validation {validation_signal.shape}")
     
-    # 1. EEG Data Inversion
-    print("\nStep 1: EEG Data Inversion")
-    eeg_inverter = EEGDataInversion(sampling_rate=sampling_rate)
-    eeg_inverter.load_eeg_data(training_eeg)
-    phases = eeg_inverter.extract_phase_hilbert()
-    frequencies = eeg_inverter.estimate_natural_frequency()
-    connectivity = eeg_inverter.estimate_connectivity()
+    # 1. Signal Data Inversion
+    print("\nStep 1: Signal Data Inversion")
+    inverter = SignalInverter(sampling_rate=sampling_rate)
+    inverter.load_data(training_signal)
+    phases = inverter.compute_hilbert_phase()
+    frequencies = inverter.derive_natural_frequencies()
+    connectivity = inverter.assess_connectivity()
     
     print(f"  Extracted phases shape: {phases.shape}")
     print(f"  Estimated frequencies: mean={np.mean(frequencies):.2f} Hz, std={np.std(frequencies):.2f} Hz")
     print(f"  Connectivity matrix: {connectivity.shape}, mean strength={np.mean(connectivity):.4f}")
     
-    # 2. Neural Mass Model
-    print("\nStep 2: Neural Mass Model")
-    neural_mass = NeuralMassModel(
-        n_oscillators=n_channels,
+    # 2. Mass Neural Dynamics
+    print("\nStep 2: Mass Neural Dynamics")
+    mass_dynamics = MassNeuralDynamics(
+        n_nodes=n_channels,
         connectivity=connectivity,
         frequencies=frequencies
     )
-    _, _, nm_phases, nm_amplitudes = neural_mass.simulate(duration=5.0, dt=1.0/sampling_rate)
+    _, _, nm_phases, nm_amplitudes = mass_dynamics.simulate(duration=5.0, dt=1.0/sampling_rate)
     
-    print(f"  Neural mass simulation: phases shape={nm_phases.shape}")
-    print(f"  Neural mass amplitudes: mean={np.mean(nm_amplitudes):.4f}")
+    print(f"  Mass dynamics simulation: phases shape={nm_phases.shape}")
+    print(f"  Mass dynamics amplitudes: mean={np.mean(nm_amplitudes):.4f}")
     
-    # 3-4. Kuramoto Model with Time-Varying Parameters
-    print("\nStep 3-4: Kuramoto Model with Time-Varying Parameters")
-    nm_freqs, nm_coupling = neural_mass.get_kuramoto_params()
-    kuramoto = TimeVaryingKuramoto(
+    # 3-4. Dynamic Oscillator Network
+    print("\nStep 3-4: Dynamic Oscillator Network")
+    nm_freqs, nm_coupling = mass_dynamics.get_network_params()
+    oscillator_network = DynamicOscillatorNetwork(
         frequencies=nm_freqs,
         adjacency_matrix=nm_coupling,
         base_coupling=1.0,
@@ -135,30 +135,31 @@ def run_eeg_kuramoto_pipeline(eeg_data, sampling_rate=256, n_channels=19):
         noise_level=0.01
     )
     
-    print(f"  Kuramoto model parameters:")
-    print(f"    - Oscillators: {kuramoto.n_oscillators}")
-    print(f"    - Frequencies: mean={np.mean(kuramoto.frequencies):.2f} Hz, std={np.std(kuramoto.frequencies):.2f} Hz")
-    print(f"    - Global coupling: {kuramoto.global_coupling:.4f}")
+    print(f"  Oscillator network parameters:")
+    print(f"    - Nodes: {oscillator_network.n_nodes}")
+    print(f"    - Frequencies: mean={np.mean(oscillator_network.frequencies):.2f} Hz, std={np.std(oscillator_network.frequencies):.2f} Hz")
+    print(f"    - Global coupling: {oscillator_network.global_coupling:.4f}")
     
-    # 5. Critical Synchronization Analysis
-    print("\nStep 5: Critical Synchronization Analysis")
-    sync_analyzer = CriticalSynchronizationAnalyzer(kuramoto)
-    mu, meets_threshold = sync_analyzer.minimum_connectivity_ratio()
+    # 5. Criticality Analysis
+    print("\nStep 5: Criticality Analysis")
+    criticality_analyzer = CriticalityAnalyzer(oscillator_network)
+    mu, meets_threshold = criticality_analyzer.minimum_connectivity_ratio()
     
     print(f"  Connectivity ratio: {mu:.4f}")
     print(f"  Meets critical threshold: {meets_threshold}")
     
-    # 6. Generate EEG
-    print("\nStep 6: Generate EEG")
-    generator = EEGGenerator(kuramoto)
-    _, kuramoto_phases, _ = kuramoto.simulate_with_dithering(duration=5.0, dt=1.0/sampling_rate)
-    generated_eeg = generator.phase_to_signal(kuramoto_phases)
+    # 6. Generate Signal
+    print("\nStep 6: Generate Signal")
+    generator = SignalGenerator(oscillator_network)
+    sim_duration = training_signal.shape[1] / sampling_rate
+    _, network_phases, _ = oscillator_network.simulate(duration=sim_duration, dt=1.0/sampling_rate)
+    generated_signal = generator.phase_to_signal(network_phases)
     
-    print(f"  Generated EEG shape: {generated_eeg.shape}")
+    print(f"  Generated signal shape: {generated_signal.shape}")
     
-    # 7. Compare EEG
-    print("\nStep 7: Compare EEG")
-    comparator = EEGComparator(training_eeg, generated_eeg)
+    # 7. Compare Signal
+    print("\nStep 7: Compare Signal")
+    comparator = SignalComparator(training_signal, generated_signal)
     initial_error = comparator.mean_absolute_error()
     correlations = comparator.pearson_correlation()
     
@@ -167,73 +168,75 @@ def run_eeg_kuramoto_pipeline(eeg_data, sampling_rate=256, n_channels=19):
     
     # 8. Statistical Analysis
     print("\nStep 8: Statistical Analysis")
-    analyzer = StatisticalAnalyzer(training_eeg, generated_eeg)
+    analyzer = StatisticalAnalyzer(training_signal, generated_signal)
     real_network, gen_network = analyzer.network_reconstruction()
     network_metrics = analyzer.evaluate_reconstruction(real_network, gen_network)
     
     print(f"  Network reconstruction accuracy: {network_metrics['accuracy']:.4f}")
     print(f"  Network reconstruction precision: {network_metrics['precision']:.4f}")
     
-    # 9. Closed-Loop Refinement
-    print("\nStep 9: Closed-Loop Refinement")
-    refiner = ClosedLoopRefiner(
-        eeg_inversion=eeg_inverter,
-        neural_mass=neural_mass,
-        kuramoto=kuramoto,
+    # 9. Closed-Loop Optimization
+    print("\nStep 9: Closed-Loop Optimization")
+    optimizer = ClosedLoopOptimizer(
+        signal_inverter=inverter,
+        mass_dynamics=mass_dynamics,
+        oscillator_network=oscillator_network,
         generator=generator,
         comparator=comparator,
         analyzer=analyzer
     )
     
-    refined_model, error_history = refiner.run_refinement(
-        training_eeg,
+    refined_model, error_history = optimizer.run_optimization(
+        training_signal,
         max_iterations=5,
         error_threshold=0.05
     )
     
-    print(f"  Refinement complete after {len(error_history)} iterations")
+    print(f"  Optimization complete after {len(error_history)} iterations")
     print(f"  Final error: {error_history[-1]:.4f}")
     
     # Validate refined model
     print("\nValidating refined model on held-out data")
-    metrics = refiner.validate_model(validation_eeg)
+    metrics = optimizer.validate_model(validation_signal)
     
     print("Validation Metrics:")
     for key, value in metrics.items():
         print(f"  {key}: {value:.4f}")
     
-    # Generate final EEG with the refined model
-    _, final_phases, _ = refined_model.simulate_with_dithering(
-        duration=len(validation_eeg[0]) / sampling_rate, 
+    # Generate final signal with the refined model
+    val_duration = validation_signal.shape[1] / sampling_rate
+    _, final_phases, _ = refined_model.simulate(
+        duration=val_duration, 
         dt=1.0/sampling_rate
     )
-    final_eeg = generator.phase_to_signal(final_phases)
+    final_signal = generator.phase_to_signal(final_phases)
     
-    return refined_model, error_history, final_eeg, validation_eeg, metrics
+    return refined_model, error_history, final_signal, validation_signal, metrics
 
 
 def main():
     """
-    Main function demonstrating the EEG-Kuramoto Neural Dynamics framework.
+    Main function demonstrating the CerebralFlow framework.
     """
     # Parameters
     sampling_rate = 256  # Hz
     n_channels = 19      # Standard 10-20 system
     duration = 10        # seconds
     
-    # Generate synthetic EEG data
-    print("Generating synthetic EEG data")
-    eeg_data = generate_synthetic_eeg(n_channels, duration, sampling_rate)
+    # Generate synthetic signal data
+    print("Generating synthetic signal data")
+    signal_data = generate_synthetic_signal(n_channels, duration, sampling_rate)
     
     # Run the framework
-    refined_model, error_history, final_eeg, validation_eeg, metrics = run_eeg_kuramoto_pipeline(
-        eeg_data, sampling_rate, n_channels
+    refined_model, error_history, final_signal, validation_signal, metrics = run_cerebral_flow_pipeline(
+        signal_data, sampling_rate, n_channels
     )
     
     # Plot results
     print("\nPlotting results")
-    plot_full_results(validation_eeg, final_eeg, refined_model, error_history)
-    plt.show()
+    plot_full_results(validation_signal, final_signal, refined_model, error_history)
+    plt.savefig('results.png')
+    # plt.show()
     
     print("\nPipeline completed successfully!")
 

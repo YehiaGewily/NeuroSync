@@ -1,0 +1,24 @@
+cerebral_flow/
+├── __init__.py            # Package initialization
+├── signals/
+│   ├── __init__.py
+│   ├── data_inversion.py  # Signal data processing and feature extraction
+│   ├── generator.py       # Signal generation from model output
+│   └── comparator.py      # Signal comparison and evaluation
+├── simulation/
+│   ├── __init__.py
+│   ├── neural_mass.py     # Mass neural dynamics model implementation
+│   ├── kuramoto.py        # Base Oscillator Network model
+│   └── time_varying.py    # Dynamic Oscillator Network model
+├── analytics/
+│   ├── __init__.py
+│   ├── critical_sync.py   # Criticality analysis
+│   ├── statistics.py      # Statistical analysis tools
+│   └── closed_loop.py     # Closed-loop optimization
+├── common/
+│   ├── __init__.py
+│   ├── plotting.py        # Visualization utilities
+│   └── metrics.py         # Performance metrics
+└── examples/
+    ├── __init__.py
+    └── run_pipeline.py    # Example usage of the framework

@@ -1,34 +1,34 @@
 """
-Time-Varying Kuramoto Model Module
+Dynamic Oscillator Network Module
 =================================
 
-This module implements the Kuramoto model with time-varying parameters and dithered stimulation.
+This module implements the oscillator network with time-varying parameters and dithered stimulation.
 It corresponds to the fourth step in the framework.
 """
 
 import numpy as np
 from scipy.integrate import solve_ivp
-from .kuramoto import KuramotoModel
+from .kuramoto import OscillatorNetwork
 
 
-class TimeVaryingKuramoto(KuramotoModel):
+class DynamicOscillatorNetwork(OscillatorNetwork):
     """
-    Kuramoto model with time-varying parameters and dithered stimulation.
+    Oscillator network with time-varying parameters and dithered stimulation.
     
-    This class extends the basic Kuramoto model to include time-varying coupling,
+    This class extends the basic oscillator network to include time-varying coupling,
     external stimulation, noise (dithering), and inertial effects.
     """
     
     def __init__(self, frequencies, adjacency_matrix, base_coupling=1.0, 
                  inertia=0.0, stimulation_strength=0.0, noise_level=0.0):
         """
-        Initialize time-varying Kuramoto model.
+        Initialize dynamic oscillator network.
         
         Parameters:
         -----------
-        frequencies : ndarray, shape (n_oscillators,)
+        frequencies : ndarray, shape (n_nodes,)
             Natural frequencies for oscillators
-        adjacency_matrix : ndarray, shape (n_oscillators, n_oscillators)
+        adjacency_matrix : ndarray, shape (n_nodes, n_nodes)
             Connectivity matrix between oscillators
         base_coupling : float, optional
             Base coupling strength
@@ -45,11 +45,11 @@ class TimeVaryingKuramoto(KuramotoModel):
         self.stimulation_strength = stimulation_strength
         self.noise_level = noise_level
         
-        # For inertial Kuramoto
-        self.velocities = np.zeros(self.n_oscillators)
+        # For inertial model
+        self.velocities = np.zeros(self.n_nodes)
         
         # Sensitivity to external input (can be heterogeneous)
-        self.sensitivity = np.ones(self.n_oscillators)
+        self.sensitivity = np.ones(self.n_nodes)
         
         # For storing time-varying parameters
         self.coupling_history = None
@@ -95,15 +95,15 @@ class TimeVaryingKuramoto(KuramotoModel):
         -----------
         t : float
             Time point
-        state : ndarray, shape (2*n_oscillators,)
+        state : ndarray, shape (2*n_nodes,)
             Current phases and velocities (for inertial model)
             
         Returns:
         --------
-        dstate_dt : ndarray, shape (2*n_oscillators,)
+        dstate_dt : ndarray, shape (2*n_nodes,)
             Derivatives of phases and velocities
         """
-        n = self.n_oscillators
+        n = self.n_nodes
         phases = state[:n]
         velocities = state[n:] if self.inertia > 0 else np.zeros(n)
         
@@ -140,7 +140,7 @@ class TimeVaryingKuramoto(KuramotoModel):
                 dvelocities_dt[i] = acceleration / self.inertia
                 
             else:
-                # Standard Kuramoto with time-varying parameters
+                # Standard oscillator network with time-varying parameters
                 dphases_dt[i] = self.frequencies[i]
                 
                 # Coupling term
@@ -156,9 +156,9 @@ class TimeVaryingKuramoto(KuramotoModel):
         else:
             return dphases_dt
     
-    def simulate_with_dithering(self, duration, dt, initial_phases=None):
+    def simulate(self, duration, dt, initial_phases=None):
         """
-        Simulate time-varying Kuramoto model with dithering.
+        Simulate dynamic oscillator network.
         
         Parameters:
         -----------
@@ -166,14 +166,14 @@ class TimeVaryingKuramoto(KuramotoModel):
             Simulation duration in time units
         dt : float
             Time step for simulation
-        initial_phases : ndarray, shape (n_oscillators,), optional
+        initial_phases : ndarray, shape (n_nodes,), optional
             Initial phases
             
         Returns:
         --------
         times : ndarray
             Time points
-        phases : ndarray, shape (n_time_points, n_oscillators)
+        phases : ndarray, shape (n_time_points, n_nodes)
             Phase evolution
         order_parameter : ndarray, shape (n_time_points,)
             Order parameter evolution
@@ -184,18 +184,18 @@ class TimeVaryingKuramoto(KuramotoModel):
         
         # Initialize phases if not provided
         if initial_phases is None:
-            initial_phases = np.random.uniform(0, 2*np.pi, self.n_oscillators)
+            initial_phases = np.random.uniform(0, 2*np.pi, self.n_nodes)
             
         # For inertial model, include velocities in state
         if self.inertia > 0:
-            initial_state = np.concatenate((initial_phases, np.zeros(self.n_oscillators)))
+            initial_state = np.concatenate((initial_phases, np.zeros(self.n_nodes)))
         else:
             initial_state = initial_phases
             
         # Set up arrays for results
-        self.phases = np.zeros((n_steps, self.n_oscillators))
+        self.phases = np.zeros((n_steps, self.n_nodes))
         if self.inertia > 0:
-            self.phases[0, :] = initial_state[:self.n_oscillators]
+            self.phases[0, :] = initial_state[:self.n_nodes]
         else:
             self.phases[0, :] = initial_state
             
@@ -217,8 +217,8 @@ class TimeVaryingKuramoto(KuramotoModel):
         
         # Extract results
         if self.inertia > 0:
-            self.phases = solution.y[:self.n_oscillators, :].T
-            self.velocities = solution.y[self.n_oscillators:, :].T
+            self.phases = solution.y[:self.n_nodes, :].T
+            self.velocities = solution.y[self.n_nodes:, :].T
         else:
             self.phases = solution.y.T
             

@@ -1,6 +1,6 @@
 """
-Critical Synchronization Analysis Module
-======================================
+Criticality Analysis Module
+=========================
 
 This module analyzes critical synchronization regime and connectivity thresholds.
 It corresponds to the fifth step in the framework.
@@ -9,25 +9,25 @@ It corresponds to the fifth step in the framework.
 import numpy as np
 
 
-class CriticalSynchronizationAnalyzer:
+class CriticalityAnalyzer:
     """
     Analyze critical synchronization regime and connectivity thresholds.
     
     This class provides tools to analyze the critical synchronization properties
-    of the Kuramoto model, including stability analysis, connectivity thresholds,
+    of the oscillator network, including stability analysis, connectivity thresholds,
     and the identification of synchronized states.
     """
     
-    def __init__(self, kuramoto_model):
+    def __init__(self, oscillator_network):
         """
-        Initialize analyzer with Kuramoto model.
+        Initialize analyzer with oscillator network.
         
         Parameters:
         -----------
-        kuramoto_model : KuramotoModel or TimeVaryingKuramoto
+        oscillator_network : OscillatorNetwork or DynamicOscillatorNetwork
             Model to analyze
         """
-        self.model = kuramoto_model
+        self.model = oscillator_network
         
     def minimum_connectivity_ratio(self):
         """
@@ -41,7 +41,7 @@ class CriticalSynchronizationAnalyzer:
             Whether mu >= critical threshold (0.6838)
         """
         adj = self.model.adjacency_matrix
-        n = self.model.n_oscillators
+        n = self.model.n_nodes
         
         # Calculate degrees
         degrees = np.sum(adj > 0, axis=1)
@@ -60,7 +60,7 @@ class CriticalSynchronizationAnalyzer:
         
         Parameters:
         -----------
-        phases : ndarray, shape (n_oscillators,)
+        phases : ndarray, shape (n_nodes,)
             Phase configuration to analyze
             
         Returns:
@@ -70,7 +70,7 @@ class CriticalSynchronizationAnalyzer:
         is_stable : bool
             Whether the configuration is stable
         """
-        n = self.model.n_oscillators
+        n = self.model.n_nodes
         adj = self.model.adjacency_matrix
         K = self.model.global_coupling
         
@@ -111,7 +111,7 @@ class CriticalSynchronizationAnalyzer:
         twisted_states : dict
             Dictionary with twist indices as keys and phase configurations as values
         """
-        n = self.model.n_oscillators
+        n = self.model.n_nodes
         
         if n_twists is None:
             n_twists = range(1, n//2 + 1)

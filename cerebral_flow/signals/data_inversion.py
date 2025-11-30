@@ -1,8 +1,8 @@
 """
-EEG Data Inversion Module
-========================
+Signal Inversion Module
+=======================
 
-This module extracts phase information from raw EEG signals and prepares
+This module extracts phase information from raw physiological signals and prepares
 inputs for neural models. It corresponds to the first step in the framework.
 """
 
@@ -10,11 +10,11 @@ import numpy as np
 from scipy import signal
 
 
-class EEGDataInversion:
+class SignalInverter:
     """
-    Extract phase information from raw EEG signals and prepare inputs for neural models.
+    Extract phase information from raw signals and prepare inputs for neural models.
     
-    This class processes raw EEG data to extract phase information using
+    This class processes raw data to extract phase information using
     Hilbert transform, estimate natural frequencies, and compute functional
     connectivity between channels.
     """
@@ -26,28 +26,28 @@ class EEGDataInversion:
         Parameters:
         -----------
         sampling_rate : float
-            Sampling rate of the EEG data in Hz
+            Sampling rate of the data in Hz
         """
         self.sampling_rate = sampling_rate
-        self.eeg_data = None
+        self.data = None
         self.phases = None
         self.frequencies = None
         self.connectivity_matrix = None
         
-    def load_eeg_data(self, eeg_data):
+    def load_data(self, data):
         """
-        Load EEG data for processing.
+        Load data for processing.
         
         Parameters:
         -----------
-        eeg_data : ndarray, shape (n_channels, n_samples)
-            EEG data with channels as rows and time points as columns
+        data : ndarray, shape (n_channels, n_samples)
+            Signal data with channels as rows and time points as columns
         """
-        self.eeg_data = eeg_data
+        self.data = data
         
     def preprocess(self, bandpass=(8, 13), notch=50):
         """
-        Preprocess EEG data with filters.
+        Preprocess data with filters.
         
         Parameters:
         -----------
@@ -59,18 +59,18 @@ class EEGDataInversion:
         Returns:
         --------
         filtered_data : ndarray, shape (n_channels, n_samples)
-            Filtered EEG data
+            Filtered data
         
         Raises:
         -------
         ValueError
-            If no EEG data is loaded
+            If no data is loaded
         """
-        if self.eeg_data is None:
-            raise ValueError("No EEG data loaded. Use load_eeg_data() first.")
+        if self.data is None:
+            raise ValueError("No data loaded. Use load_data() first.")
             
-        n_channels, n_samples = self.eeg_data.shape
-        filtered_data = np.zeros_like(self.eeg_data)
+        n_channels, n_samples = self.data.shape
+        filtered_data = np.zeros_like(self.data)
         
         # Notch filter for power line interference
         if notch:
@@ -84,23 +84,23 @@ class EEGDataInversion:
         for i in range(n_channels):
             # Apply notch filter if requested
             if notch:
-                filtered_data[i, :] = signal.filtfilt(b_notch, a_notch, self.eeg_data[i, :])
+                filtered_data[i, :] = signal.filtfilt(b_notch, a_notch, self.data[i, :])
             else:
-                filtered_data[i, :] = self.eeg_data[i, :]
+                filtered_data[i, :] = self.data[i, :]
                 
             # Apply bandpass filter
             filtered_data[i, :] = signal.filtfilt(b_bandpass, a_bandpass, filtered_data[i, :])
             
         return filtered_data
         
-    def extract_phase_hilbert(self, filtered_data=None):
+    def compute_hilbert_phase(self, filtered_data=None):
         """
         Extract phase using Hilbert transform with bandpass filtering.
         
         Parameters:
         -----------
         filtered_data : ndarray, shape (n_channels, n_samples), optional
-            Pre-filtered EEG data. If None, uses internally stored data
+            Pre-filtered data. If None, uses internally stored data
             
         Returns:
         --------
@@ -113,8 +113,8 @@ class EEGDataInversion:
             If no data is available for processing
         """
         if filtered_data is None:
-            if self.eeg_data is None:
-                raise ValueError("No EEG data loaded. Use load_eeg_data() first.")
+            if self.data is None:
+                raise ValueError("No data loaded. Use load_data() first.")
             filtered_data = self.preprocess()
         
         n_channels, n_samples = filtered_data.shape
@@ -129,7 +129,7 @@ class EEGDataInversion:
             
         return self.phases
     
-    def estimate_natural_frequency(self, phases=None):
+    def derive_natural_frequencies(self, phases=None):
         """
         Estimate natural frequency from phase time series.
         
@@ -171,7 +171,7 @@ class EEGDataInversion:
                 
         return self.frequencies
     
-    def estimate_connectivity(self, phases=None, method='plv', threshold=0.3):
+    def assess_connectivity(self, phases=None, method='plv', threshold=0.3):
         """
         Estimate functional connectivity from phases.
         

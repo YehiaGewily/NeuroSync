@@ -1,8 +1,8 @@
 """
-EEG Generator Module
+Signal Generator Module
 ===================
 
-This module generates EEG time series from Kuramoto model phases.
+This module generates signal time series from oscillator network phases.
 It corresponds to the sixth step in the framework.
 """
 
@@ -11,54 +11,54 @@ from scipy.linalg import svd
 from scipy import signal
 
 
-class EEGGenerator:
+class SignalGenerator:
     """
-    Generate EEG time series from Kuramoto model phases.
+    Generate signal time series from oscillator network phases.
     
-    This class converts oscillatory phases from the Kuramoto model into EEG-like
-    signals, with options for applying spatial filtering and computing spectral features.
+    This class converts oscillatory phases from the oscillator network into signal-like
+    time series, with options for applying spatial filtering and computing spectral features.
     """
     
-    def __init__(self, kuramoto_model=None):
+    def __init__(self, oscillator_network=None):
         """
-        Initialize generator with Kuramoto model.
+        Initialize generator with oscillator network.
         
         Parameters:
         -----------
-        kuramoto_model : KuramotoModel or TimeVaryingKuramoto, optional
+        oscillator_network : OscillatorNetwork or DynamicOscillatorNetwork, optional
             Model providing phases
         """
-        self.model = kuramoto_model
-        self.eeg_data = None
+        self.model = oscillator_network
+        self.signal_data = None
         self.svd_components = None
         self.spatial_maps = None
         
-    def set_kuramoto_model(self, model):
+    def set_oscillator_network(self, model):
         """
-        Set the Kuramoto model.
+        Set the oscillator network model.
         
         Parameters:
         -----------
-        model : KuramotoModel or TimeVaryingKuramoto
-            Model to use for generating EEG
+        model : OscillatorNetwork or DynamicOscillatorNetwork
+            Model to use for generating signals
         """
         self.model = model
         
     def phase_to_signal(self, phases=None, amplitudes=None):
         """
-        Convert phases to EEG-like signals.
+        Convert phases to signal-like time series.
         
         Parameters:
         -----------
-        phases : ndarray, shape (n_time_points, n_oscillators), optional
-            Phases from Kuramoto model
-        amplitudes : ndarray, shape (n_time_points, n_oscillators), optional
+        phases : ndarray, shape (n_time_points, n_nodes), optional
+            Phases from oscillator network
+        amplitudes : ndarray, shape (n_time_points, n_nodes), optional
             Amplitudes (default: all 1.0)
             
         Returns:
         --------
-        eeg_data : ndarray, shape (n_oscillators, n_time_points)
-            Generated EEG-like signals
+        signal_data : ndarray, shape (n_nodes, n_time_points)
+            Generated signal-like time series
             
         Raises:
         -------
@@ -67,51 +67,51 @@ class EEGGenerator:
         """
         if phases is None:
             if self.model is None or self.model.phases is None:
-                raise ValueError("No phases available. Provide phases or set Kuramoto model.")
+                raise ValueError("No phases available. Provide phases or set oscillator network.")
             phases = self.model.phases
             
-        n_time_points, n_oscillators = phases.shape
+        n_time_points, n_nodes = phases.shape
         
         # Use provided amplitudes or set to 1.0
         if amplitudes is None:
             amplitudes = np.ones_like(phases)
             
-        # Generate EEG signals
-        self.eeg_data = np.zeros((n_oscillators, n_time_points))
+        # Generate signals
+        self.signal_data = np.zeros((n_nodes, n_time_points))
         
-        for i in range(n_oscillators):
-            self.eeg_data[i, :] = amplitudes[:, i] * np.cos(phases[:, i])
+        for i in range(n_nodes):
+            self.signal_data[i, :] = amplitudes[:, i] * np.cos(phases[:, i])
             
-        return self.eeg_data
+        return self.signal_data
     
-    def apply_svd(self, eeg_data=None, n_components=None):
+    def apply_svd(self, signal_data=None, n_components=None):
         """
-        Apply Singular Value Decomposition to EEG data.
+        Apply Singular Value Decomposition to signal data.
         
         Parameters:
         -----------
-        eeg_data : ndarray, shape (n_channels, n_time_points), optional
-            EEG data to decompose
+        signal_data : ndarray, shape (n_channels, n_time_points), optional
+            Signal data to decompose
         n_components : int, optional
             Number of components to retain (default: keep 99% variance)
             
         Returns:
         --------
         reconstructed_data : ndarray, shape (n_channels, n_time_points)
-            Reconstructed EEG data using selected components
+            Reconstructed signal data using selected components
             
         Raises:
         -------
         ValueError
-            If no EEG data is available
+            If no signal data is available
         """
-        if eeg_data is None:
-            if self.eeg_data is None:
-                raise ValueError("No EEG data available. Generate or provide data first.")
-            eeg_data = self.eeg_data
+        if signal_data is None:
+            if self.signal_data is None:
+                raise ValueError("No signal data available. Generate or provide data first.")
+            signal_data = self.signal_data
             
         # Apply SVD
-        U, S, Vt = svd(eeg_data, full_matrices=False)
+        U, S, Vt = svd(signal_data, full_matrices=False)
         
         # Determine number of components to keep
         if n_components is None:
@@ -128,14 +128,14 @@ class EEGGenerator:
         
         return reconstructed_data
     
-    def compute_psd(self, eeg_data=None, fs=256, fmin=1, fmax=45, n_fft=512):
+    def compute_psd(self, signal_data=None, fs=256, fmin=1, fmax=45, n_fft=512):
         """
         Compute Power Spectral Density.
         
         Parameters:
         -----------
-        eeg_data : ndarray, shape (n_channels, n_time_points), optional
-            EEG data
+        signal_data : ndarray, shape (n_channels, n_time_points), optional
+            Signal data
         fs : float, optional
             Sampling frequency
         fmin, fmax : float, optional
@@ -153,14 +153,14 @@ class EEGGenerator:
         Raises:
         -------
         ValueError
-            If no EEG data is available
+            If no signal data is available
         """
-        if eeg_data is None:
-            if self.eeg_data is None:
-                raise ValueError("No EEG data available. Generate or provide data first.")
-            eeg_data = self.eeg_data
+        if signal_data is None:
+            if self.signal_data is None:
+                raise ValueError("No signal data available. Generate or provide data first.")
+            signal_data = self.signal_data
             
-        n_channels, n_times = eeg_data.shape
+        n_channels, n_times = signal_data.shape
         
         # Initialize output
         freqs = np.linspace(0, fs/2, n_fft//2 + 1)
@@ -170,7 +170,7 @@ class EEGGenerator:
         
         # Compute PSD for each channel
         for ch in range(n_channels):
-            f, Pxx = signal.welch(eeg_data[ch, :], fs=fs, nperseg=n_fft, noverlap=n_fft//2)
+            f, Pxx = signal.welch(signal_data[ch, :], fs=fs, nperseg=n_fft, noverlap=n_fft//2)
             psd[ch, :] = Pxx[mask]
             
         return freqs, psd
