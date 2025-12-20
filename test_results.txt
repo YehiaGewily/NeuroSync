@@ -1,0 +1,81 @@
+============================= test session starts =============================
+platform win32 -- Python 3.10.8, pytest-9.0.2, pluggy-1.6.0
+rootdir: E:\side projects\NeuroSync
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.6.2.post1
+collected 6 items
+
+tests\test_analytics.py .....                                            [ 83%]
+tests\test_pipeline.py F                                                 [100%]
+
+================================== FAILURES ===================================
+___________________________ test_pipeline_execution ___________________________
+
+    def test_pipeline_execution():
+        # Run with small data for speed
+        data = generate_synthetic_signal(n_channels=4, duration=2, sampling_rate=128)
+    
+        # Mock plt.show/savefig to prevent IO
+        original_savefig = plt.savefig
+        plt.savefig = lambda *args, **kwargs: None
+    
+        try:
+            model, history, signal, val_signal, metrics = run_cerebral_flow_pipeline(
+                data, sampling_rate=128, n_channels=4
+            )
+    
+            assert model is not None
+            assert len(history) > 0
+>           assert signal.shape == data[:, :int(0.8*data.shape[1])].shape
+E           assert (4, 52) == (4, 204)
+E             
+E             At index 1 diff: 52 != 204
+E             Use -v to get more diff
+
+tests\test_pipeline.py:29: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Starting CerebralFlow Framework Pipeline
+Data split: Training (4, 204), Validation (4, 52)
+
+Step 1: Signal Data Inversion
+  Extracted phases shape: (4, 204)
+  Estimated frequencies: mean=10.16 Hz
+
+Step 1.5: Statistical Validation (Surrogates)
+  Generating 20 phase-shuffled surrogates...
+  Observed Mean Connectivity: 0.3750
+  Surrogate Mean (N=20): 0.3750
+  Z-score: 0.00, p-value: 1.0000
+  Result is NOT statistically significant
+
+Step 1.6: Advanced Connectivity (PLI)
+  PLI Matrix Mean: 0.3407
+
+Step 2: Mass Neural Dynamics
+
+Step 3-4: Dynamic Oscillator Network
+
+Step 5: Criticality Analysis
+  Connectivity ratio: 0.3333 (Threshold met: False)
+
+Step 6: Generate Signal
+
+Step 7: Compare Signal
+  Initial MAE: 1.1381
+
+Step 8: Statistical Analysis
+  Reconstruction Accuracy: 0.7500
+
+Step 9: Closed-Loop Optimization
+Iteration 1/5, Error: 1.1553
+Iteration 2/5, Error: 1.1724
+Iteration 3/5, Error: 1.1631
+Iteration 4/5, Error: 1.1315
+Iteration 5/5, Error: 1.1707
+  Optimization complete. Final Error: 1.1707
+
+Validating refined model...
+=========================== short test summary info ===========================
+FAILED tests/test_pipeline.py::test_pipeline_execution - assert (4, 52) == (4...
+========================= 1 failed, 5 passed in 1.47s =========================

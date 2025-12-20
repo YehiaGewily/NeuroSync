@@ -1,0 +1,280 @@
+============================= test session starts =============================
+platform win32 -- Python 3.10.8, pytest-9.0.2, pluggy-1.6.0
+rootdir: E:\side projects\NeuroSync
+configfile: pyproject.toml
+plugins: anyio-4.6.2.post1
+collected 1 item
+
+tests\test_pipeline.py F                                                 [100%]
+
+================================== FAILURES ===================================
+___________________________ test_pipeline_execution ___________________________
+
+    def test_pipeline_execution():
+        # Run with small data for speed
+        data = generate_synthetic_signal(n_channels=4, duration=2, sampling_rate=128)
+    
+        # Mock plt.show/savefig to prevent IO
+        original_savefig = plt.savefig
+        plt.savefig = lambda *args, **kwargs: None
+    
+        try:
+>           model, history, signal, val_signal, metrics = run_cerebral_flow_pipeline(
+                data, sampling_rate=128, n_channels=4
+            )
+
+tests\test_pipeline.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+examples\run_pipeline.py:166: in run_cerebral_flow_pipeline
+    refined_model, error_history = optimizer.run_optimization(
+cerebral_flow\analytics\closed_loop.py:213: in run_optimization
+    error = self.run_single_iteration(real_signal)
+cerebral_flow\analytics\closed_loop.py:169: in run_single_iteration
+    updated_model = self.analyzer.update_model_parameters(self.oscillator_network)
+cerebral_flow\analytics\statistics.py:407: in update_model_parameters
+    self._update_frequencies(updated_model, learning_rate)
+cerebral_flow\analytics\statistics.py:450: in _update_frequencies
+    freqs_real, psd_real = self.compute_psd(self.real_signal)
+cerebral_flow\analytics\statistics.py:596: in compute_psd
+    f, Pxx = signal.welch(signal_data[ch, :], fs=fs, nperseg=n_fft, noverlap=n_fft//2)
+C:\Users\yehya\AppData\Local\Programs\Python\Python310\lib\site-packages\scipy\signal\_spectral_py.py:652: in welch
+    freqs, Pxx = csd(x, x, fs=fs, window=window, nperseg=nperseg,
+C:\Users\yehya\AppData\Local\Programs\Python\Python310\lib\site-packages\scipy\signal\_spectral_py.py:790: in csd
+    freqs, _, Pxy = _spectral_helper(x, y, fs, window, nperseg, noverlap,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+x = array([ 0.17768082,  0.74510931,  1.22935533,  1.369781  ,  1.31788106,
+        0.89529078,  0.38644749, -0.29560358, ...483586,  1.10685264,  0.73999237,  0.23810024,  0.0534733 ,
+       -0.15398172, -0.49327779, -0.61733967, -0.58395622])
+y = array([ 0.17768082,  0.74510931,  1.22935533,  1.369781  ,  1.31788106,
+        0.89529078,  0.38644749, -0.29560358, ...483586,  1.10685264,  0.73999237,  0.23810024,  0.0534733 ,
+       -0.15398172, -0.49327779, -0.61733967, -0.58395622])
+fs = 256, window = 'hann', nperseg = 204, noverlap = 256, nfft = 204
+detrend = 'constant', return_onesided = True, scaling = 'density', axis = -1
+mode = 'psd', boundary = None, padded = False
+
+    def _spectral_helper(x, y, fs=1.0, window='hann', nperseg=None, noverlap=None,
+                         nfft=None, detrend='constant', return_onesided=True,
+                         scaling='density', axis=-1, mode='psd', boundary=None,
+                         padded=False):
+        """Calculate various forms of windowed FFTs for PSD, CSD, etc.
+    
+        This is a helper function that implements the commonality between
+        the stft, psd, csd, and spectrogram functions. It is not designed to
+        be called externally. The windows are not averaged over; the result
+        from each window is returned.
+    
+        Parameters
+        ----------
+        x : array_like
+            Array or sequence containing the data to be analyzed.
+        y : array_like
+            Array or sequence containing the data to be analyzed. If this is
+            the same object in memory as `x` (i.e. ``_spectral_helper(x,
+            x, ...)``), the extra computations are spared.
+        fs : float, optional
+            Sampling frequency of the time series. Defaults to 1.0.
+        window : str or tuple or array_like, optional
+            Desired window to use. If `window` is a string or tuple, it is
+            passed to `get_window` to generate the window values, which are
+            DFT-even by default. See `get_window` for a list of windows and
+            required parameters. If `window` is array_like it will be used
+            directly as the window and its length must be nperseg. Defaults
+            to a Hann window.
+        nperseg : int, optional
+            Length of each segment. Defaults to None, but if window is str or
+            tuple, is set to 256, and if window is array_like, is set to the
+            length of the window.
+        noverlap : int, optional
+            Number of points to overlap between segments. If `None`,
+            ``noverlap = nperseg // 2``. Defaults to `None`.
+        nfft : int, optional
+            Length of the FFT used, if a zero padded FFT is desired. If
+            `None`, the FFT length is `nperseg`. Defaults to `None`.
+        detrend : str or function or `False`, optional
+            Specifies how to detrend each segment. If `detrend` is a
+            string, it is passed as the `type` argument to the `detrend`
+            function. If it is a function, it takes a segment and returns a
+            detrended segment. If `detrend` is `False`, no detrending is
+            done. Defaults to 'constant'.
+        return_onesided : bool, optional
+            If `True`, return a one-sided spectrum for real data. If
+            `False` return a two-sided spectrum. Defaults to `True`, but for
+            complex data, a two-sided spectrum is always returned.
+        scaling : { 'density', 'spectrum' }, optional
+            Selects between computing the cross spectral density ('density')
+            where `Pxy` has units of V**2/Hz and computing the cross
+            spectrum ('spectrum') where `Pxy` has units of V**2, if `x`
+            and `y` are measured in V and `fs` is measured in Hz.
+            Defaults to 'density'
+        axis : int, optional
+            Axis along which the FFTs are computed; the default is over the
+            last axis (i.e. ``axis=-1``).
+        mode: str {'psd', 'stft'}, optional
+            Defines what kind of return values are expected. Defaults to
+            'psd'.
+        boundary : str or None, optional
+            Specifies whether the input signal is extended at both ends, and
+            how to generate the new values, in order to center the first
+            windowed segment on the first input point. This has the benefit
+            of enabling reconstruction of the first input point when the
+            employed window function starts at zero. Valid options are
+            ``['even', 'odd', 'constant', 'zeros', None]``. Defaults to
+            `None`.
+        padded : bool, optional
+            Specifies whether the input signal is zero-padded at the end to
+            make the signal fit exactly into an integer number of window
+            segments, so that all of the signal is included in the output.
+            Defaults to `False`. Padding occurs after boundary extension, if
+            `boundary` is not `None`, and `padded` is `True`.
+    
+        Returns
+        -------
+        freqs : ndarray
+            Array of sample frequencies.
+        t : ndarray
+            Array of times corresponding to each data segment
+        result : ndarray
+            Array of output data, contents dependent on *mode* kwarg.
+    
+        Notes
+        -----
+        Adapted from matplotlib.mlab
+    
+        .. versionadded:: 0.16.0
+        """
+        if mode not in ['psd', 'stft']:
+            raise ValueError(f"Unknown value for mode {mode}, must be one of: "
+                             "{'psd', 'stft'}")
+    
+        boundary_funcs = {'even': even_ext,
+                          'odd': odd_ext,
+                          'constant': const_ext,
+                          'zeros': zero_ext,
+                          None: None}
+    
+        if boundary not in boundary_funcs:
+            raise ValueError(f"Unknown boundary option '{boundary}', "
+                             f"must be one of: {list(boundary_funcs.keys())}")
+    
+        # If x and y are the same object we can save ourselves some computation.
+        same_data = y is x
+    
+        if not same_data and mode != 'psd':
+            raise ValueError("x and y must be equal if mode is 'stft'")
+    
+        axis = int(axis)
+    
+        # Ensure we have np.arrays, get outdtype
+        x = np.asarray(x)
+        if not same_data:
+            y = np.asarray(y)
+            outdtype = np.result_type(x, y, np.complex64)
+        else:
+            outdtype = np.result_type(x, np.complex64)
+    
+        if not same_data:
+            # Check if we can broadcast the outer axes together
+            xouter = list(x.shape)
+            youter = list(y.shape)
+            xouter.pop(axis)
+            youter.pop(axis)
+            try:
+                outershape = np.broadcast(np.empty(xouter), np.empty(youter)).shape
+            except ValueError as e:
+                raise ValueError('x and y cannot be broadcast together.') from e
+    
+        if same_data:
+            if x.size == 0:
+                return np.empty(x.shape), np.empty(x.shape), np.empty(x.shape)
+        else:
+            if x.size == 0 or y.size == 0:
+                outshape = outershape + (min([x.shape[axis], y.shape[axis]]),)
+                emptyout = np.moveaxis(np.empty(outshape), -1, axis)
+                return emptyout, emptyout, emptyout
+    
+        if x.ndim > 1:
+            if axis != -1:
+                x = np.moveaxis(x, axis, -1)
+                if not same_data and y.ndim > 1:
+                    y = np.moveaxis(y, axis, -1)
+    
+        # Check if x and y are the same length, zero-pad if necessary
+        if not same_data:
+            if x.shape[-1] != y.shape[-1]:
+                if x.shape[-1] < y.shape[-1]:
+                    pad_shape = list(x.shape)
+                    pad_shape[-1] = y.shape[-1] - x.shape[-1]
+                    x = np.concatenate((x, np.zeros(pad_shape)), -1)
+                else:
+                    pad_shape = list(y.shape)
+                    pad_shape[-1] = x.shape[-1] - y.shape[-1]
+                    y = np.concatenate((y, np.zeros(pad_shape)), -1)
+    
+        if nperseg is not None:  # if specified by user
+            nperseg = int(nperseg)
+            if nperseg < 1:
+                raise ValueError('nperseg must be a positive integer')
+    
+        # parse window; if array like, then set nperseg = win.shape
+        win, nperseg = _triage_segments(window, nperseg, input_length=x.shape[-1])
+    
+        if nfft is None:
+            nfft = nperseg
+        elif nfft < nperseg:
+            raise ValueError('nfft must be greater than or equal to nperseg.')
+        else:
+            nfft = int(nfft)
+    
+        if noverlap is None:
+            noverlap = nperseg//2
+        else:
+            noverlap = int(noverlap)
+        if noverlap >= nperseg:
+>           raise ValueError('noverlap must be less than nperseg.')
+E           ValueError: noverlap must be less than nperseg.
+
+C:\Users\yehya\AppData\Local\Programs\Python\Python310\lib\site-packages\scipy\signal\_spectral_py.py:2041: ValueError
+---------------------------- Captured stdout call -----------------------------
+Starting CerebralFlow Framework Pipeline
+Data split: Training (4, 204), Validation (4, 52)
+
+Step 1: Signal Data Inversion
+  Extracted phases shape: (4, 204)
+  Estimated frequencies: mean=10.11 Hz
+
+Step 1.5: Statistical Validation (Surrogates)
+  Generating 20 phase-shuffled surrogates...
+  Observed Mean Connectivity: 0.7500
+  Surrogate Mean (N=20): 0.7500
+  Z-score: 0.00, p-value: 1.0000
+  Result is NOT statistically significant
+
+Step 1.6: Advanced Connectivity (PLI)
+  PLI Matrix Mean: 0.6495
+
+Step 2: Mass Neural Dynamics
+
+Step 3-4: Dynamic Oscillator Network
+
+Step 5: Criticality Analysis
+  Connectivity ratio: 1.0000 (Threshold met: True)
+
+Step 6: Generate Signal
+
+Step 7: Compare Signal
+  Initial MAE: 1.1432
+
+Step 8: Statistical Analysis
+  Reconstruction Accuracy: 0.6250
+
+Step 9: Closed-Loop Optimization
+============================== warnings summary ===============================
+tests/test_pipeline.py::test_pipeline_execution
+  C:\Users\yehya\AppData\Local\Programs\Python\Python310\lib\site-packages\scipy\signal\_spectral_py.py:790: UserWarning: nperseg = 512 is greater than input length  = 204, using nperseg = 204
+    freqs, _, Pxy = _spectral_helper(x, y, fs, window, nperseg, noverlap,
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_pipeline.py::test_pipeline_execution - ValueError: noverlap...
+======================== 1 failed, 1 warning in 1.61s =========================

@@ -573,7 +573,7 @@ class StatisticalAnalyzer:
         fmin, fmax : float, optional
             Minimum and maximum frequencies to consider
         n_fft : int, optional
-            Number of FFT points
+            Number of FFT points (target)
             
         Returns
         -------
@@ -582,18 +582,30 @@ class StatisticalAnalyzer:
         psd : ndarray, shape (n_channels, n_freqs)
             Power spectral density for each channel
         """
-        # Compute frequency bins
-        freqs = np.fft.rfftfreq(n_fft, d=1/fs)
-        mask = (freqs >= fmin) & (freqs <= fmax)
-        freqs = freqs[mask]
+        n_channels, n_samples = signal_data.shape
         
-        n_channels = signal_data.shape[0]
-        n_freq_bins = np.sum(mask)
+        # Adjust nperseg if signal is shorter than n_fft
+        nperseg = min(n_fft, n_samples)
+        # Ensure noverlap is valid (must be < nperseg)
+        noverlap = nperseg // 2
+        
+        # Compute PSD for first channel to determine frequencies and shape
+        f, Pxx_first = signal.welch(signal_data[0, :], fs=fs, nperseg=nperseg, noverlap=noverlap)
+        
+        # Create mask
+        mask = (f >= fmin) & (f <= fmax)
+        freqs = f[mask]
+        
+        # Initialize Output
+        n_freq_bins = len(freqs)
         psd = np.zeros((n_channels, n_freq_bins))
         
-        # Use Welch's method for each channel
-        for ch in range(n_channels):
-            f, Pxx = signal.welch(signal_data[ch, :], fs=fs, nperseg=n_fft, noverlap=n_fft//2)
+        # Fill first channel
+        psd[0, :] = Pxx_first[mask]
+        
+        # Compute for remaining channels
+        for ch in range(1, n_channels):
+            _, Pxx = signal.welch(signal_data[ch, :], fs=fs, nperseg=nperseg, noverlap=noverlap)
             psd[ch, :] = Pxx[mask]
             
         return freqs, psd

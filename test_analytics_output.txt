@@ -1,0 +1,54 @@
+============================= test session starts =============================
+platform win32 -- Python 3.10.8, pytest-9.0.2, pluggy-1.6.0
+rootdir: E:\side projects\NeuroSync
+configfile: pyproject.toml
+plugins: anyio-4.6.2.post1
+collected 5 items
+
+tests\test_analytics.py .F...                                            [100%]
+
+================================== FAILURES ===================================
+_________________ TestSurrogates.test_phase_shuffle_spectrum __________________
+
+self = <tests.test_analytics.TestSurrogates object at 0x000001A4622030A0>
+
+    def test_phase_shuffle_spectrum(self):
+        # Phase shuffling should preserve amplitude spectrum
+        t = np.linspace(0, 1, 100)
+        data = np.sin(2 * np.pi * 10 * t).reshape(1, -1)
+        gen = SurrogateGenerator(data)
+        surrogate = next(gen.phase_shuffle(n_surrogates=1))
+    
+        orig_fft = np.abs(np.fft.rfft(data))
+        surr_fft = np.abs(np.fft.rfft(surrogate))
+    
+>       np.testing.assert_allclose(orig_fft, surr_fft, rtol=1e-5)
+
+tests\test_analytics.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (<function assert_allclose.<locals>.compare at 0x000001A4118584C0>, array([[8.88178420e-16, 9.66177064e-02, 1.99251292...5671590e-01, 3.33427843e-01, 3.31612898e-01, 3.30214038e-01,
+        3.29221605e-01, 3.28628822e-01, 3.28431672e-01]]))
+kwds = {'equal_nan': True, 'err_msg': '', 'header': 'Not equal to tolerance rtol=1e-05, atol=0', 'strict': False, ...}
+
+    @wraps(func)
+    def inner(*args, **kwds):
+        with self._recreate_cm():
+>           return func(*args, **kwds)
+E           AssertionError: 
+E           Not equal to tolerance rtol=1e-05, atol=0
+E           
+E           Mismatched elements: 1 / 51 (1.96%)
+E           Max absolute difference among violations: 2.22044605e-16
+E           Max relative difference among violations: 0.2
+E            ACTUAL: array([[8.881784e-16, 9.661771e-02, 1.992513e-01, 3.152102e-01,
+E                   4.550226e-01, 6.362138e-01, 8.923238e-01, 1.299146e+00,
+E                   2.075699e+00, 4.235174e+00, 4.890085e+01, 5.778413e+00,...
+E            DESIRED: array([[1.110223e-15, 9.661771e-02, 1.992513e-01, 3.152102e-01,
+E                   4.550226e-01, 6.362138e-01, 8.923238e-01, 1.299146e+00,
+E                   2.075699e+00, 4.235174e+00, 4.890085e+01, 5.778413e+00,...
+
+C:\Users\yehya\AppData\Local\Programs\Python\Python310\lib\contextlib.py:79: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_analytics.py::TestSurrogates::test_phase_shuffle_spectrum
+========================= 1 failed, 4 passed in 0.90s =========================
